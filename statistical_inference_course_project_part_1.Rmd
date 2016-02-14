@@ -1,0 +1,143 @@
+---
+title: "Statistical Inference Course Project - Part 1"
+author: "Aaron Cole"
+date: "8 February 2016"
+output:
+  html_document:
+    toc: yes
+  pdf_document:
+    number_sections: yes
+    toc: yes
+---
+
+# Synopsis #
+The following text is quoted from the assignment information page on Coursera.
+
+> In this project you will investigate the exponential distribution in R and compare it with the Central Limit Theorem. The exponential distribution can be simulated in R with rexp(n, lambda) where lambda is the rate parameter. The mean of exponential distribution is 1/lambda and the standard deviation is also 1/lambda. Set lambda = 0.2 for all of the simulations. You will investigate the distribution of averages of 40 exponentials. Note that you will need to do a thousand simulations. Illustrate via simulation and associated explanatory text the properties of the distribution of the mean of 40 exponentials.
+> 
+> * Show the sample mean and compare it to the theoretical mean of the distribution.
+> * Show how variable the sample is (via variance) and compare it to the theoretical variance of the distribution.
+> * Show that the distribution is approximately normal.
+> 
+> In point 3, focus on the difference between the distribution of a large collection of random exponentials and the distribution of a large collection of averages of 40 exponentials.
+
+# Simulations #
+
+## Load libraries ##
+```{r echo=TRUE}
+library(ggplot2)
+```
+
+## Setup variables ##
+```{r echo=TRUE}
+# Number of simulations to perform.
+simulations <- 1000
+
+# Number of exponentials to generate.
+exponentials <- 40
+
+# Lambda value to use for generation.
+lambda <- 0.2
+```
+
+## Generate the means ##
+```{r echo=TRUE}
+# Create a vector to hold the means.
+means <- as.numeric()
+
+# Iterate for our number of simulations, setting the seed for each iteration.
+for (i in 1:simulations) {
+  set.seed(i)
+  means <- c(means, mean(rexp(exponentials, lambda)))
+}
+
+# Convert to a data.frame.
+means <- as.data.frame(means)
+```
+
+# Sample mean versus theoretical mean #
+
+## Calculate the sample mean to 3 decimals ##
+```{r echo=TRUE}
+sampleMean <- round(mean(means$means), 3)
+print(sampleMean)
+```
+
+## Calculate the theoretical mean ##
+We can calculate the theoretical mean using the formula 1/lambda.
+```{r echo=TRUE}
+theoreticalMean <- 1/lambda
+print(theoreticalMean)
+```
+
+## Plot ##
+```{r echo=TRUE}
+ggplot(data = means, aes(x = means)) +
+  geom_histogram(bins = 50, fill = "green", colour = "black") +
+  scale_x_continuous(breaks = 1:10) +
+  xlab("Mean") +
+  ylab("Frequency") +
+  ggtitle("Histogram of the means with lines indicating the sample and theoretical means") +
+  geom_vline(xintercept = sampleMean, colour = "red", size = 4) +
+  geom_vline(xintercept = theoreticalMean, colour = "yellow", size = 2)
+```
+
+* Red line marks the sample mean value of 5.002.
+* Yellow line marks the theoretical mean value of 5.000.
+
+## Summary ##
+* The theoretical and sample mean calcultions both closely coincide, with a difference of only 0.002.
+
+# Sample variance versus theoretical variance #
+
+## Calculate the theoretical variance to 3 decimals ##
+We can calculate the theoretical variance using the formula (1/(lambda^2))/exponentials.
+```{r echo=TRUE}
+theoreticalVariance <- round((1/(lambda^2))/exponentials, 3)
+print(theoreticalVariance)
+```
+
+## Calculate the sample variance to 3 decimals ##
+```{r echo=TRUE}
+sampleVariance <- round(var(means$means), 3)
+print(sampleVariance)
+```
+
+## Calculate the theoretical standard deviation to 3 decimals ##
+We can calculate the theoretical standard deviation using the formula (1/lambda)/sqrt(exponentials).
+```{r echo=TRUE}
+theoreticalSD <- round((1/lambda)/sqrt(exponentials), 3)
+print(theoreticalSD)
+```
+
+## Calculate the sample standard deviation to 3 decimals ##
+```{r echo=TRUE}
+sampleSD <- round(sd(means$means), 3)
+print(sampleSD)
+```
+
+## Summary ##
+* The theoretical and sample variance is close, with a  difference of only 0.006 (sample 0.631 - theoretical 0.625).
+* The theoretical and sample standard deviation is close, with a difference of only 0.003 (sample 0.794 - theoretical 0.791). 
+
+# Distribution #
+
+## Create a normal distribution for comparison ##
+```{r echo=TRUE}
+set.seed(1337)
+normalDistribution <- data.frame(normalValues = rnorm(simulations, mean = sampleMean, sd = sampleSD))
+```
+
+## Density plot of the means with comparison line for the normal distribution ##
+```{r echo=TRUE}
+ggplot(data = means, aes(x = means)) +
+  geom_histogram(aes(y=..density..), bins = 50, fill = "green", colour = "black") +
+  geom_density(alpha=.5, colour="red", size = 2) +
+  geom_density(data = normalDistribution, aes(x = normalValues), alpha=.5, colour="blue", size = 2) +
+  scale_x_continuous(breaks = 1:10) +
+  xlab("Mean") +
+  ylab("Density")
+```
+
+## Summary ##
+The plot shows that the sample means have a distribution similiar to a normal distribution. This is due to the Central Limit Theorem.
