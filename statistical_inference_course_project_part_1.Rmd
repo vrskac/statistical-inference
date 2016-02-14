@@ -3,10 +3,10 @@ title: "Statistical Inference Course Project - Part 1"
 author: "Aaron Cole"
 date: "8 February 2016"
 output:
-  html_document:
-    toc: yes
   pdf_document:
     number_sections: yes
+    toc: yes
+  html_document:
     toc: yes
 ---
 
@@ -77,7 +77,8 @@ ggplot(data = means, aes(x = means)) +
   scale_x_continuous(breaks = 1:10) +
   xlab("Mean") +
   ylab("Frequency") +
-  ggtitle("Histogram of the means with lines indicating the sample and theoretical means") +
+  ggtitle(paste("Histogram of the means with lines indicating the sample and",
+                "theoretical means", sep = "")) +
   geom_vline(xintercept = sampleMean, colour = "red", size = 4) +
   geom_vline(xintercept = theoreticalMean, colour = "yellow", size = 2)
 ```
@@ -125,15 +126,19 @@ print(sampleSD)
 ## Create a normal distribution for comparison ##
 ```{r echo=TRUE}
 set.seed(1337)
-normalDistribution <- data.frame(normalValues = rnorm(simulations, mean = sampleMean, sd = sampleSD))
+normalDistribution <- data.frame(normalValues = rnorm(simulations, 
+                                                      mean = sampleMean, 
+                                                      sd = sampleSD))
 ```
 
 ## Density plot of the means with comparison line for the normal distribution ##
 ```{r echo=TRUE}
 ggplot(data = means, aes(x = means)) +
-  geom_histogram(aes(y=..density..), bins = 50, fill = "green", colour = "black") +
+  geom_histogram(aes(y=..density..), bins = 50, fill = "green", 
+                 colour = "black") +
   geom_density(alpha=.5, colour="red", size = 2) +
-  geom_density(data = normalDistribution, aes(x = normalValues), alpha=.5, colour="blue", size = 2) +
+  geom_density(data = normalDistribution, aes(x = normalValues), 
+               alpha=.5, colour="blue", size = 2) +
   scale_x_continuous(breaks = 1:10) +
   xlab("Mean") +
   ylab("Density")

@@ -1,0 +1,141 @@
+---
+title: "Statistical Inference Course Project - Part 2"
+author: "Aaron Cole"
+date: "8 February 2016"
+output:
+  pdf_document:
+    number_sections: yes
+    toc: yes
+  html_document:
+    toc: yes
+---
+
+# Synopsis #
+The following text is quoted from the assignment information page on Coursera.
+
+> * Load the ToothGrowth data and perform some basic exploratory data analyses.
+> * Provide a basic summary of the data.
+> * Use confidence intervals and/or hypothesis tests to compare tooth growth by supp and dose. (Only use the techniques from class, even if there's other approaches worth considering).
+> * State your conclusions and the assumptions needed for your conclusions.
+
+Evaluation criteria as follows.
+
+> * Did you perform an exploratory data analysis of at least a single plot or table highlighting basic features of the data?
+> * Did the student perform some relevant confidence intervals and/or tests?
+> * Were the results of the tests and/or intervals interpreted in the context of the problem correctly?
+> * Did the student describe the assumptions needed for their conclusions?
+
+# Exploratory analysis and basic summary #
+
+## Load libraries ##
+```{r echo=TRUE}
+suppressMessages(library(ggplot2))
+suppressMessages(library(dplyr))
+```
+
+## Load tooth growth data and configure groupings ##
+```{r echo=TRUE}
+data(ToothGrowth)
+tg <- tbl_df(ToothGrowth)
+tg <- group_by(tg, supp, dose)
+```
+
+## Summary and explanation of the data ##
+```{r echo=TRUE}
+summary(tg)
+```
+
+The data is the length of odontoblasts (teeth) in each of 10 guinea pigs at each of three dose levels of Vitamin C (0.5, 1, and 2 mg) with each of two delivery methods (orange juice or ascorbic acid). The data frame has 60 observations on 3 variables.
+
+Variable | Class | Comments
+---------|-------|---------
+len	| numeric | Tooth length.
+supp | factor | Supplement type (VC or OJ).
+dose | numeric | Dose in milligrams.
+
+## Exploratory analysis and basic summary ##
+```{r echo=TRUE}
+ggplot(ToothGrowth, aes(x=factor(dose),
+                    y=len,
+                    fill=factor(dose))) +
+    geom_boxplot(notch=F) + 
+    facet_grid(.~supp) +
+    ggtitle("Tooth length split by dose for each delivery method") +
+    xlab("Dose") +
+    ylab("Length") +
+    scale_fill_discrete(name="Dose")
+
+# Text summary of the means by supp and dose.
+summarise_each(tg, funs(mean))
+
+# Text summary of the total growth (len) by supp.
+summarise_each(select(group_by(tg, supp), supp, len), funs(sum))
+```
+
+* The plot and text summary appear to indicate that higher dose levels result in higher growth length.
+* Supplement type "OJ" would appear to result in higher average growth at the lower dose levels of 0.5 and 1.0.
+* Supplement type "OJ" also has higher growth across all observations for all dose levels, when compared with "VC".
+* The average growth is similiar for both supplement types at a dose level of 2.0.
+
+# Using confidence intervals to compare tooth growth by supp and dose #
+
+## Assumptions ##
+
+* Our data is roughly normal.
+* The variance between groups is unequal.
+
+## Testing the supplements for all dose levels##
+```{r echo=TRUE}
+t.test(len ~ supp, 
+       data = filter(tg), 
+       paired = FALSE, 
+       var.equal = TRUE, 
+       alternative = "two.sided")
+```
+
+* P-value is above 5%.
+* Confidence interval contains 0.
+
+## Testing the supplements at a dose level of 0.5 ##
+```{r echo=TRUE}
+t.test(len ~ supp, 
+       data = filter(tg, dose == 0.5), 
+       paired = FALSE, 
+       var.equal = TRUE, 
+       alternative = "two.sided")
+```
+
+* P-value is below 5%.
+* Confidence interval does not contain 0.
+* Indicates with 95% confidence that supplement type OJ results in higher growth rates at a dose of 0.5.
+
+## Testing the supplements at a dose level of 1.0 ##
+```{r echo=TRUE}
+t.test(len ~ supp, 
+       data = filter(tg, dose == 1.0), 
+       paired = FALSE, 
+       var.equal = TRUE, 
+       alternative = "two.sided")
+```
+
+* P-value is below 5%.
+* Confidence interval does not contain 0.
+* Indicates with 95% confidence that supplement type OJ results in higher growth rates at a dose of 1.0.
+
+## Testing the supplements at a dose level of 2.0 ##
+```{r echo=TRUE}
+t.test(len ~ supp, 
+       data = filter(tg, dose == 2.0), 
+       paired = FALSE, 
+       var.equal = TRUE, 
+       alternative = "two.sided")
+```
+
+* P-value is above 5%.
+* Confidence interval contains 0.
+
+## Conculsions ##
+
+* Our t-tests support a difference between the supplements only for dose levels of 0.5 and 1.0, with a 95% confidence.
+* At a dose level of 0.5 and 1.0 supplement type OJ appears to promote higher growth.
+* Our t-tests do not support any difference between the supplements at a dose level of 2.0, or across the total sample for all dose levels.
